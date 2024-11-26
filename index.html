@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Advanced Fractal Explorer</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
     <style>
@@ -13,10 +13,14 @@
         }
 
         body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #0a0a0a;
             color: #fff;
-            overflow: hidden;
         }
 
         .header {
@@ -56,6 +60,11 @@
 
         canvas {
             display: block;
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
             background: #000;
         }
 
@@ -267,6 +276,40 @@
             padding-top: 1rem;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
+
+        /* Ensure other UI elements stay on top */
+        .header,
+        .info-panel,
+        .customization-panel,
+        .loading-indicator,
+        .quality-indicator {
+            z-index: 100;
+        }
+
+        .control-group {
+            transition: opacity 0.3s ease;
+        }
+
+        .control-group input[type="range"] {
+            pointer-events: auto;
+            touch-action: none;
+        }
+
+        .preset-button, [data-type], .color-preset {
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+        }
+
+        .preset-button:active, [data-type].active, .color-preset.active {
+            background-color: #444;
+        }
+
+        /* Add visual feedback for active states */
+        .preset-button:hover,
+        [data-type]:hover,
+        .color-preset:hover {
+            background-color: #333;
+        }
     </style>
 </head>
 <body>
@@ -295,15 +338,15 @@
             <h3>Color Schemes</h3>
             <div class="control-group">
                 <div class="color-presets">
-                    <div class="color-preset active" style="background: linear-gradient(45deg, #ff0000, #00ff00, #0000ff)" data-scheme="rainbow" title="Rainbow"></div>
-                    <div class="color-preset" style="background: linear-gradient(45deg, #ff0000, #ff8c00, #ffff00)" data-scheme="fire" title="Fire"></div>
-                    <div class="color-preset" style="background: linear-gradient(45deg, #000080, #0000ff, #00ffff)" data-scheme="ocean" title="Ocean"></div>
-                    <div class="color-preset" style="background: linear-gradient(45deg, #ff00ff, #00ffff, #ffff00)" data-scheme="psychedelic" title="Psychedelic"></div>
-                    <div class="color-preset" style="background: linear-gradient(45deg, #4a0000, #ff0000)" data-scheme="red" title="Red"></div>
-                    <div class="color-preset" style="background: linear-gradient(45deg, #002b11, #00ff44)" data-scheme="green" title="Green"></div>
-                    <div class="color-preset" style="background: linear-gradient(45deg, #000024, #0066ff)" data-scheme="blue" title="Blue"></div>
-                    <div class="color-preset" style="background: linear-gradient(45deg, #2a0042, #bf00ff)" data-scheme="purple" title="Purple"></div>
-                    <div class="color-preset custom-preset" style="background: #ffffff" data-scheme="custom" title="Custom">
+                    <div class="color-preset active" style="background: linear-gradient(45deg, #ff0000, #00ff00, #0000ff)" data-scheme="0" title="Rainbow"></div>
+                    <div class="color-preset" style="background: linear-gradient(45deg, #ff4500, #ff8c00, #ffd700)" data-scheme="1" title="Fire"></div>
+                    <div class="color-preset" style="background: linear-gradient(45deg, #000080, #0000ff, #00ffff)" data-scheme="2" title="Ocean"></div>
+                    <div class="color-preset" style="background: linear-gradient(45deg, #ff00ff, #00ffff, #ffff00)" data-scheme="3" title="Psychedelic"></div>
+                    <div class="color-preset" style="background: linear-gradient(45deg, #800000, #ff0000)" data-scheme="4" title="Red"></div>
+                    <div class="color-preset" style="background: linear-gradient(45deg, #004d00, #00ff00)" data-scheme="5" title="Green"></div>
+                    <div class="color-preset" style="background: linear-gradient(45deg, #000080, #0000ff)" data-scheme="6" title="Blue"></div>
+                    <div class="color-preset" style="background: linear-gradient(45deg, #4b0082, #8a2be2)" data-scheme="7" title="Purple"></div>
+                    <div class="color-preset custom-preset" style="background: #ffffff" data-scheme="8" title="Custom">
                         <input type="color" id="customColorPicker" class="custom-color-picker">
                     </div>
                 </div>
@@ -339,36 +382,36 @@
             </div>
 
             <div class="control-group">
-                <label for="colorBrightness">Brightness <span class="range-value">1.0</span></label>
-                <input type="range" id="colorBrightness" min="0.1" max="2" step="0.1" value="1">
+                <label for="brightness">Brightness <span class="range-value">1.0</span></label>
+                <input type="range" id="brightness" min="0.1" max="2" step="0.1" value="1">
             </div>
 
             <div class="control-group">
-                <label for="colorContrast">Contrast <span class="range-value">1.0</span></label>
-                <input type="range" id="colorContrast" min="0.1" max="2" step="0.1" value="1">
+                <label for="contrast">Contrast <span class="range-value">1.0</span></label>
+                <input type="range" id="contrast" min="0.1" max="2" step="0.1" value="1">
             </div>
             <div class="control-group type-specific mandelbrot-params">
                 <label for="mandelbrotPower">Power <span class="range-value">2.0</span></label>
-                <input type="range" id="mandelbrotPower" min="2" max="6" step="0.1" value="2">
+                <input type="range" id="mandelbrotPower" min="1.0" max="5.0" step="0.1" value="2.0">
             </div>
 
             <div class="control-group type-specific julia-params">
                 <label for="juliaReal">Real Component <span class="range-value">-0.4</span></label>
-                <input type="range" id="juliaReal" min="-2" max="2" step="0.01" value="-0.4">
+                <input type="range" id="juliaReal" min="-2.0" max="2.0" step="0.01" value="-0.4">
             </div>
             <div class="control-group type-specific julia-params">
                 <label for="juliaImag">Imaginary Component <span class="range-value">0.6</span></label>
-                <input type="range" id="juliaImag" min="-2" max="2" step="0.01" value="0.6">
+                <input type="range" id="juliaImag" min="-2.0" max="2.0" step="0.01" value="0.6">
             </div>
 
             <div class="control-group type-specific burning-ship-params">
                 <label for="shipRotation">Ship Intensity <span class="range-value">1.0</span></label>
-                <input type="range" id="shipRotation" min="0.1" max="2.0" step="0.1" value="1.0">
+                <input type="range" id="shipRotation" min="0.5" max="2.0" step="0.1" value="1.0">
             </div>
 
             <div class="control-group type-specific celtic-params">
                 <label for="foldIntensity">Fold Intensity <span class="range-value">1.0</span></label>
-                <input type="range" id="foldIntensity" min="0.1" max="2.0" step="0.1" value="1.0">
+                <input type="range" id="foldIntensity" min="0.5" max="2.0" step="0.1" value="1.0">
             </div>
 
         </div>
@@ -385,652 +428,538 @@
 
     <script>
         class FractalExplorer {
-        constructor() {
-        this.canvas = document.getElementById('fractalCanvas');
-        this.ctx = this.canvas.getContext('2d');
-        this.debug = document.getElementById('debug');
-        this.loadingIndicator = document.querySelector('.loading-indicator');
-        this.qualityIndicator = document.querySelector('.quality-indicator');
-        
-        this.defaultParams = {
-            maxIterations: 100,
-            zoom: 200,
-            offsetX: -0.5,
-            offsetY: 0,
-            fractalType: 'mandelbrot',
-            colorScheme: 'rainbow',
-            smoothing: 1.0,
-            escapeRadius: 2,
-            colorCycles: 1,
-            colorOffset: 0,
-            colorBrightness: 1,
-            colorContrast: 1,
-            mandelbrotPower: 2,
-            juliaReal: -0.4,
-            juliaImag: 0.6,
-            shipRotation: 1.0,
-            foldIntensity: 1.0
-        };
-
-        this.params = { ...this.defaultParams };
-        
-        this.velocity = {
-            x: 0,
-            y: 0,
-            zoom: 0
-        };
-
-        this.minZoom = 0.001; // Minimum zoom level
-        this.maxZoom = 100000; // Maximum zoom level
-        this.renderQuality = 1;
-        this.isRendering = false;
-        this.currentRender = null;
-        this.lastRenderTime = 0;
-        this.renderDelay = 50; // ms delay between render attempts
-        this.highQualityTimeout = null;
-        
-        this.lastZoomTime = 0;
-        this.zoomUpdateDelay = 16; // About 60fps
-
-        this.customColor = '#ffffff';
-
-        this.renderQueue = [];
-        this.isRendering = false;
-        this.currentRender = null;
-        this.lastRenderTime = 0;
-        this.renderDelay = 50; // ms delay between render attemptsY
-        this.highQualityTimeout = null;
-
-        this.lastZoomTime = 0;
-        this.zoomUpdateDelay = 16; // About 60fps
-
-        this.customColor = '#ffffff';
-
-        this.setupCanvas();
-        this.setupCustomControls();
-        this.startAnimation();
-
-        // Add mouse event listeners for zooming and panning
-        this.canvas.addEventListener('wheel', (event) => this.handleZoom(event));
-        this.canvas.addEventListener('mousedown', (event) => this.handleMouseDown(event));
-        this.canvas.addEventListener('mouseup', (event) => this.handleMouseUp(event));
-        this.canvas.addEventListener('mousemove', (event) => this.pan(event));
-        this.canvas.addEventListener('mouseleave', () => this.stopPan());
-
-        this.isRightMouseDown = false;
-        this.zoomSpeed = 0.02; // Adjust this value to change zoom speed
-        
-        // Add right-click event listeners
-        this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-        this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
-        this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
-    }
-
-    setupCustomControls() {
-        // Fractal Type Buttons
-        document.querySelectorAll('.preset-button[data-type]').forEach(button => {
-            button.addEventListener('click', () => {
-                const type = button.dataset.type;
-                this.setPreset(type);
-                
-                // Update active state of buttons
-                document.querySelectorAll('.preset-button[data-type]').forEach(b => 
-                    b.classList.toggle('active', b === button));
-                
-                // Show/hide appropriate parameter sections
-                document.querySelectorAll('.control-group.type-specific').forEach(params => {
-                    params.style.display = params.classList.contains(`${type}-params`) ? 'block' : 'none';
+            constructor() {
+                this.canvas = document.getElementById('fractalCanvas');
+                this.gl = this.canvas.getContext('webgl2', {
+                    preserveDrawingBuffer: true,
+                    antialias: true
                 });
-            });
-        });
+                
+                if (!this.gl) {
+                    alert('WebGL 2 not supported');
+                    return;
+                }
 
-        // Color Scheme Presets with progressive rendering
-        document.querySelectorAll('.color-preset').forEach(preset => {
-            preset.addEventListener('click', () => {
-                this.params.colorScheme = preset.dataset.scheme;
-                document.querySelectorAll('.color-preset').forEach(p => 
-                    p.classList.toggle('active', p === preset));
-                this.renderProgressive();
-            });
-        });
+                // Initialize with default parameters
+                this.params = {
+                    maxIterations: 100,
+                    zoom: 250,         // Adjusted default zoom
+                    offsetX: -0.5,     // Adjusted default position
+                    offsetY: 0,
+                    colorScheme: 0,
+                    fractalType: 'mandelbrot',
+                    colorCycles: 1.0,
+                    colorOffset: 0.0,
+                    brightness: 1.0,
+                    contrast: 1.0,
+                    escapeRadius: 2.0,
+                    smoothing: 1.0,
+                    juliaReal: -0.4,
+                    juliaImag: 0.6,
+                    mandelbrotPower: 2.0,
+                    shipRotation: 1.0,
+                    foldIntensity: 1.0
+                };
 
-        const setupRangeControl = (id) => {
-            const input = document.getElementById(id);
-            const value = input.parentElement.querySelector('.range-value');
-            input.addEventListener('input', () => {
-                const val = parseFloat(input.value);
-                this.params[id] = val;
-                value.textContent = val.toFixed(1);
-                this.renderProgressive();
-            });
-        };
-
-        // Setup all range controls with proper names
-        [
-            'maxIterations', 'smoothing', 'escapeRadius', 'colorCycles', 
-            'colorOffset', 'colorBrightness', 'colorContrast',
-            'mandelbrotPower', 'juliaReal', 'juliaImag', 
-            'shipRotation', 'foldIntensity'
-        ].forEach(setupRangeControl);
-
-        // Setup custom color picker
-        const customColorPicker = document.getElementById('customColorPicker');
-        customColorPicker.addEventListener('input', (e) => {
-            const color = e.target.value;
-            this.customColor = color;
-            e.target.parentElement.style.background = color;
-            if (this.params.colorScheme === 'custom') {
+                this.initWebGL();
+                this.resizeCanvas();
+                this.setupEventListeners();
+                this.setupControls();
                 this.render();
             }
-        });
 
-        customColorPicker.addEventListener('change', (e) => {
-            const preset = e.target.parentElement;
-            document.querySelectorAll('.color-preset').forEach(p => 
-                p.classList.remove('active'));
-            preset.classList.add('active');
-            this.params.colorScheme = 'custom';
-            this.render();
-        });
-    }
-
-    reset() {
-        Object.assign(this.params, this.defaultParams);
-        this.velocity = { x: 0, y: 0, zoom: 0 };
-        this.renderQuality = 1;
-        this.render();
-    }
-
-    setPreset(type) {
-        const presets = {
-            mandelbrot: {
-                fractalType: 'mandelbrot',
-                offsetX: -0.5,
-                offsetY: 0,
-                zoom: 200
-            },
-            julia: {
-                fractalType: 'julia',
-                offsetX: 0,
-                offsetY: 0,
-                zoom: 300
-            },
-            tricorn: {
-                fractalType: 'tricorn',
-                offsetX: 0,
-                offsetY: 0,
-                zoom: 200
-            },
-            'burning-ship': {
-                fractalType: 'burning-ship',
-                offsetX: -0.5,
-                offsetY: -0.5,
-                zoom: 200,
-                shipRotation: 1.0
-            },
-            celtic: {
-                fractalType: 'celtic',
-                offsetX: 0,
-                offsetY: 0,
-                zoom: 200
-            }
-        };
-
-        Object.assign(this.params, presets[type]);
-        
-        this.velocity = { x: 0, y: 0, zoom: 0 };
-        this.renderProgressive();
-    }
-
-    // Add this method to calculate world coordinates from screen coordinates
-    getWorldCoordinates(screenX, screenY) {
-        return {
-            x: (screenX - this.canvas.width / 2) / this.params.zoom + this.params.offsetX,
-            y: (screenY - this.canvas.height / 2) / this.params.zoom + this.params.offsetY
-        };
-    }
-
-    // Update handleZoom for smoother zooming
-    handleZoom(event) {
-        event.preventDefault();
-        
-        const currentTime = performance.now();
-        if (currentTime - this.lastZoomTime < this.zoomUpdateDelay) {
-            return;
-        }
-        this.lastZoomTime = currentTime;
-
-        const rect = this.canvas.getBoundingClientRect();
-        const mouseX = event.clientX - rect.left;
-        const mouseY = event.clientY - rect.top;
-
-        const worldCoordsBefore = this.getWorldCoordinates(mouseX, mouseY);
-        const zoomFactor = 0.1;
-        const zoomAmount = event.deltaY < 0 ? 1 + zoomFactor : 1 - zoomFactor;
-        this.params.zoom *= zoomAmount;
-        const worldCoordsAfter = this.getWorldCoordinates(mouseX, mouseY);
-
-        this.params.offsetX += (worldCoordsBefore.x - worldCoordsAfter.x);
-        this.params.offsetY += (worldCoordsBefore.y - worldCoordsAfter.y);
-
-        // Implement progressive rendering
-        this.renderProgressive();
-    }
-
-    renderProgressive() {
-        // Cancel any pending high-quality renders
-        if (this.highQualityTimeout) {
-            clearTimeout(this.highQualityTimeout);
-        }
-
-        // Immediate low-quality preview
-        this.render(0.35, true);
-
-        // Schedule medium quality render
-        setTimeout(() => {
-            if (!this.isRightMouseDown) {  // Only render if not actively zooming
-                this.render(0.65, true);
-            }
-        }, 100);
-
-        // Schedule high quality render
-        this.highQualityTimeout = setTimeout(() => {
-            if (!this.isRightMouseDown) {  // Only render if not actively zooming
-                this.render(1, true);
-            }
-        }, 300);
-    }
-
-    // Update startAnimation for smoother continuous zooming
-    startAnimation() {
-        let lastTime = performance.now();
-        let lastMouseX = 0;
-        let lastMouseY = 0;
-
-        this.canvas.addEventListener('mousemove', (e) => {
-            const rect = this.canvas.getBoundingClientRect();
-            lastMouseX = e.clientX - rect.left;
-            lastMouseY = e.clientY - rect.top;
-        });
-        
-        const animate = () => {
-            const currentTime = performance.now();
-            const deltaTime = (currentTime - lastTime) / 1000;
-            lastTime = currentTime;
-
-            if (this.isRightMouseDown && 
-                (currentTime - this.lastZoomTime >= this.zoomUpdateDelay)) {
-                this.lastZoomTime = currentTime;
-                
-                const worldCoordsBefore = this.getWorldCoordinates(lastMouseX, lastMouseY);
-                this.params.zoom *= (1 + this.zoomSpeed);
-                const worldCoordsAfter = this.getWorldCoordinates(lastMouseX, lastMouseY);
-                
-                this.params.offsetX += (worldCoordsBefore.x - worldCoordsAfter.x);
-                this.params.offsetY += (worldCoordsBefore.y - worldCoordsAfter.y);
-                
-                this.renderProgressive();
-            }
-
-            requestAnimationFrame(animate);
-        };
-
-        animate();
-    }
-
-    computePoint(x, y) {
-        let zx = 0, zy = 0;
-        let cx = x, cy = y;
-
-        if (this.params.fractalType === 'julia') {
-            [zx, zy] = [x, y];
-            [cx, cy] = [this.params.juliaReal, this.params.juliaImag];
-        }
-
-        const maxIter = this.params.maxIterations;
-        const escapeRadius = this.params.escapeRadius * this.params.escapeRadius;
-        let i = 0;
-        
-        while (i < maxIter) {
-            const zx2 = zx * zx;
-            const zy2 = zy * zy;
-            
-            if (zx2 + zy2 > escapeRadius) break;
-
-            let newZx, newZy;
-
-            switch (this.params.fractalType) {
-                case 'mandelbrot':
-                    // Standard Mandelbrot with power parameter
-                    const r = Math.sqrt(zx2 + zy2);
-                    const theta = Math.atan2(zy, zx);
-                    const power = this.params.mandelbrotPower;
-                    newZx = Math.pow(r, power) * Math.cos(theta * power) + cx;
-                    newZy = Math.pow(r, power) * Math.sin(theta * power) + cy;
-                    break;
-
-                case 'burning-ship':
-                    // Correct Burning Ship implementation
-                    newZx = zx2 - zy2 + cx;
-                    newZy = Math.abs(2 * zx * zy) + cy;
-                    break;
-
-                case 'celtic':
-                    // Celtic variation with fold parameter
-                    const foldIntensity = this.params.foldIntensity;
-                    newZx = Math.abs(zx2 - zy2) + cx;
-                    newZy = 2 * zx * zy * foldIntensity + cy;
-                    break;
-
-                case 'tricorn':
-                    newZx = zx2 - zy2 + cx;
-                    newZy = -2 * zx * zy + cy;
-                    break;
-
-                case 'julia':
-                    newZx = zx2 - zy2 + this.params.juliaReal;
-                    newZy = 2 * zx * zy + this.params.juliaImag;
-                    break;
-            }
-
-            zx = newZx;
-            zy = newZy;
-            i++;
-        }
-
-        if (this.params.smoothing > 0 && i < maxIter) {
-            const log_zn = Math.log(zx * zx + zy * zy) / 2;
-            const nu = Math.log(log_zn / Math.log(this.params.escapeRadius)) / Math.log(2);
-            i = i + 1 - nu;
-        }
-
-        return i;
-    }
-
-    render(quality = 1, immediate = false) {
-        if (this.currentRender) {
-            this.currentRender.cancelled = true;
-        }
-
-        const renderContext = {
-            cancelled: false,
-            quality: quality,
-            startTime: performance.now()
-        };
-
-        this.currentRender = renderContext;
-
-        // Update info panel
-        const infoPanel = document.querySelector('.info-panel');
-        const coordsElement = infoPanel.querySelector('.coordinates');
-        coordsElement.textContent = `x: ${this.params.offsetX.toFixed(3)} y: ${this.params.offsetY.toFixed(3)} zoom: ${this.params.zoom.toFixed(1)}x`;
-
-        if (immediate) {
-            const startTime = performance.now();
-            this.renderToCanvas(this.canvas, quality);
-            const endTime = performance.now();
-            
-            // Update performance info
-            const perfElement = infoPanel.querySelector('.performance');
-            perfElement.textContent = `Render time: ${Math.round(endTime - startTime)}ms`;
-            
-            if (quality < 1) {
-                setTimeout(() => this.render(1), 100);
-            }
-            return;
-        }
-
-        // Rest of the existing chunked rendering logic...
-    }
-
-    setupCustomizationUI() {
-        const fractalTypeSelect = document.getElementById('fractalType');
-        const maxIterationsInput = document.getElementById('maxIterations');
-        const maxIterationsValue = document.getElementById('maxIterationsValue');
-        const colorSchemeSelect = document.getElementById('colorScheme');
-        const customColorGroup = document.getElementById('customColorGroup');
-        const customColorInput = document.getElementById('customColor');
-        const juliaRealInput = document.getElementById('juliaReal');
-        const juliaImagInput = document.getElementById('juliaImag');
-        const resetButton = document.getElementById('resetButton');
-
-        // Update max iterations display
-        maxIterationsInput.addEventListener('input', () => {
-            maxIterationsValue.textContent = maxIterationsInput.value;
-            this.params.maxIterations = parseInt(maxIterationsInput.value);
-            this.render();
-        });
-
-        // Handle fractal type change
-        fractalTypeSelect.addEventListener('change', () => {
-            this.params.fractalType = fractalTypeSelect.value;
-            this.render();
-        });
-
-        // Handle color scheme change
-        colorSchemeSelect.addEventListener('change', () => {
-            this.params.colorScheme = colorSchemeSelect.value;
-            customColorGroup.style.display = colorSchemeSelect.value === 'custom' ? 'block' : 'none';
-            this.render();
-        });
-
-        // Handle custom color input
-        customColorInput.addEventListener('input', () => {
-            this.params.customColor = customColorInput.value;
-            this.render();
-        });
-
-        // Update Julia parameters
-        juliaRealInput.addEventListener('input', () => {
-            this.params.juliaReal = parseFloat(juliaRealInput.value);
-            this.render();
-        });
-
-        juliaImagInput.addEventListener('input', () => {
-            this.params.juliaImag = parseFloat(juliaImagInput.value);
-            this.render();
-        });
-
-        // Reset button
-        resetButton.addEventListener('click', () => {
-            this.reset();
-        });
-    }
-
-    setupCanvas() {
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    }
-
-    startPan(event) {
-        this.isPanning = true;
-        this.lastMouseX = event.clientX;
-        this.lastMouseY = event.clientY;
-    }
-
-    stopPan() {
-        this.isPanning = false;
-    }
-
-    // Update pan method for smoother panning
-    pan(event) {
-        if (!this.isPanning) return;
-
-        const dx = (event.clientX - this.lastMouseX) / this.params.zoom;
-        const dy = (event.clientY - this.lastMouseY) / this.params.zoom;
-
-        this.params.offsetX -= dx;
-        this.params.offsetY -= dy;
-
-        this.lastMouseX = event.clientX;
-        this.lastMouseY = event.clientY;
-
-        // Use progressive rendering for panning
-        this.renderProgressive();
-    }
-
-    handleMouseDown(event) {
-        if (event.button === 0) { // Left click
-            this.startPan(event);
-        } else if (event.button === 2) { // Right click
-            event.preventDefault();
-            this.isRightMouseDown = true;
-        }
-    }
-
-    handleMouseUp(event) {
-        if (event.button === 0) { // Left click
-            this.stopPan();
-        } else if (event.button === 2) { // Right click
-            this.isRightMouseDown = false;
-        }
-    }
-
-    getColor(t) {
-        // Apply color parameters
-        t = (t * this.params.colorCycles + this.params.colorOffset) % 1;
-        t = Math.pow(t, this.params.colorContrast);
-        const brightness = this.params.colorBrightness;
-
-        let colors;
-        if (this.params.colorScheme === 'custom') {
-            // Convert hex to RGB
-            const hex = this.customColor.substring(1);
-            const r = parseInt(hex.substring(0, 2), 16);
-            const g = parseInt(hex.substring(2, 4), 16);
-            const b = parseInt(hex.substring(4, 6), 16);
-            
-            // Create a gradient from black to the custom color
-            colors = [
-                t * r,
-                t * g,
-                t * b
-            ];
-        } else {
-            switch (this.params.colorScheme) {
-                case 'rainbow':
-                    colors = [
-                        Math.sin(t * 2 * Math.PI) * 127 + 128,
-                        Math.sin(t * 2 * Math.PI + 2 * Math.PI / 3) * 127 + 128,
-                        Math.sin(t * 2 * Math.PI + 4 * Math.PI / 3) * 127 + 128
-                    ];
-                    break;
-                case 'fire':
-                    colors = [
-                        Math.min(255, t * 510), // More red
-                        Math.min(255, t * 320), // Medium orange
-                        Math.min(255, t * 100)  // Less blue for warmer tone
-                    ];
-                    break;
-                case 'ocean':
-                    colors = [
-                        Math.min(255, t * 100),  // Less red for cooler tone
-                        Math.min(255, t * 320),   // Medium green-blue
-                        Math.min(255, t * 510)    // More blue
-                    ];
-                    break;
-                case 'psychedelic':
-                    const angle = t * 6 * Math.PI;
-                    colors = [
-                        Math.sin(angle) * 127 + 128,
-                        Math.sin(angle + 2 * Math.PI / 3) * 127 + 128,
-                        Math.sin(angle + 4 * Math.PI / 3) * 127 + 128
-                    ];
-                    break;
-                case 'red':
-                    colors = [
-                        Math.min(255, t * 510), // Strong red
-                        Math.min(255, t * 100), // Less green
-                        Math.min(255, t * 100)  // Less blue
-                    ];
-                    break;
-                case 'green':
-                    colors = [
-                        Math.min(255, t * 100),  // Less red
-                        Math.min(255, t * 510),  // Strong green
-                        Math.min(255, t * 100)   // Less blue
-                    ];
-                    break;
-                case 'blue':
-                    colors = [
-                        Math.min(255, t * 100),  // Less red
-                        Math.min(255, t * 100),  // Less green
-                        Math.min(255, t * 510)   // Strong blue
-                    ];
-                    break;
-                case 'purple':
-                    colors = [
-                        Math.min(255, t * 400),  // Medium red
-                        Math.min(255, t * 100),  // Less green
-                        Math.min(255, t * 400)   // Medium blue
-                    ];
-                    break;
-                default:
-                    colors = [t * 255, t * 255, t * 255]; // Grayscale fallback
-            }
-        }
-
-        // Apply brightness and ensure values are within valid range
-        return colors.map(v => Math.min(255, Math.max(0, Math.round(v * brightness))));
-    }
-
-    async renderToCanvas(targetCanvas, quality = 1, forceImmediate = false) {
-        const width = targetCanvas.width;
-        const height = targetCanvas.height;
-        const ctx = targetCanvas.getContext('2d');
-        const imageData = ctx.createImageData(width, height);
-        const data = imageData.data;
-
-        // Calculate dimensions based on quality
-        const renderWidth = Math.floor(width * quality);
-        const renderHeight = Math.floor(height * quality);
-        const scaleX = width / renderWidth;
-        const scaleY = height / renderHeight;
-
-        // Render all pixels
-        for (let y = 0; y < renderHeight; y++) {
-            for (let x = 0; x < renderWidth; x++) {
-                const real = (x * scaleX - width / 2) / this.params.zoom + this.params.offsetX;
-                const imag = (y * scaleY - height / 2) / this.params.zoom + this.params.offsetY;
-
-                const iteration = this.computePoint(real, imag);
-                const color = iteration === this.params.maxIterations
-                    ? [0, 0, 0]
-                    : this.getColor(iteration / this.params.maxIterations);
-
-                // Fill scaled pixels
-                const startX = Math.floor(x * scaleX);
-                const startY = Math.floor(y * scaleY);
-                const endX = Math.floor((x + 1) * scaleX);
-                const endY = Math.floor((y + 1) * scaleY);
-
-                for (let py = startY; py < endY; py++) {
-                    for (let px = startX; px < endX; px++) {
-                        const idx = (py * width + px) * 4;
-                        data[idx] = color[0];
-                        data[idx + 1] = color[1];
-                        data[idx + 2] = color[2];
-                        data[idx + 3] = 255;
+            initWebGL() {
+                // Vertex shader remains the same
+                const vertexShader = `#version 300 es
+                    in vec4 position;
+                    void main() {
+                        gl_Position = position;
+                    }`;
+
+                // Updated fragment shader
+                const fragmentShader = `#version 300 es
+                    precision highp float;
+                    uniform vec2 resolution;
+                    uniform vec2 offset;
+                    uniform float zoom;
+                    uniform int maxIterations;
+                    uniform int fractalType;
+                    uniform float params[12];
+                    out vec4 fragColor;
+
+                    vec3 hsv2rgb(vec3 c) {
+                        vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+                        vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+                        return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
                     }
+
+                    vec3 getColor(float t) {
+                        t = fract(t * params[0] + params[11]); // colorCycles and offset
+                        
+                        vec3 color;
+                        int scheme = int(params[8]);
+                        
+                        switch(scheme) {
+                            case 0: // Rainbow
+                                color = hsv2rgb(vec3(t, 0.85, 1.0));
+                                break;
+                            case 1: // Fire
+                                color = vec3(
+                                    min(1.0, t * 2.0),
+                                    pow(t, 2.0) * 0.8,
+                                    pow(t, 4.0) * 0.3
+                                );
+                                break;
+                            case 2: // Ocean
+                                color = vec3(
+                                    pow(t, 3.0) * 0.3,
+                                    pow(t, 2.0) * 0.5,
+                                    min(1.0, t * 1.5)
+                                );
+                                break;
+                            case 3: // Psychedelic
+                                color = hsv2rgb(vec3(t * 3.0, 0.95, 1.0));
+                                break;
+                            case 4: // Red
+                                color = vec3(t, 0.0, 0.0);
+                                break;
+                            case 5: // Green
+                                color = vec3(0.0, t, 0.0);
+                                break;
+                            case 6: // Blue
+                                color = vec3(0.0, 0.0, t);
+                                break;
+                            case 7: // Purple
+                                color = vec3(t * 0.8, 0.0, t);
+                                break;
+                            default:
+                                color = vec3(t); // Fallback to grayscale
+                        }
+                        
+                        // Apply contrast and brightness
+                        color = (color - 0.5) * params[2] + 0.5; // contrast
+                        color *= params[3]; // brightness
+                        
+                        return clamp(color, 0.0, 1.0);
+                    }
+
+                    void main() {
+                        vec2 uv = (gl_FragCoord.xy - resolution * 0.5) / zoom;
+                        vec2 c = uv + offset;
+                        vec2 z;
+                        
+                        if(fractalType == 1) { // Julia set
+                            z = c;  // For Julia set, initial z is the point we're rendering
+                            c = vec2(params[4], params[5]);  // And c is the fixed Julia parameter
+                        } else {
+                            z = vec2(0.0, 0.0);  // For other fractals, z starts at origin
+                        }
+
+                        int iter;
+                        float smoothIter = 0.0;
+                        
+                        for(iter = 0; iter < maxIterations; iter++) {
+                            if(fractalType == 0) { // Mandelbrot
+                                float power = params[6];
+                                float r = sqrt(z.x * z.x + z.y * z.y);
+                                float theta = atan(z.y, z.x);
+                                r = pow(r, power);
+                                theta = theta * power;
+                                z.x = r * cos(theta);
+                                z.y = r * sin(theta);
+                                z += c;
+                                
+                            } else if(fractalType == 1) { // Julia
+                                // Correct Julia set formula
+                                float x = z.x * z.x - z.y * z.y;
+                                float y = 2.0 * z.x * z.y;
+                                z = vec2(x + c.x, y + c.y);  // z² + c
+                                
+                            } else if(fractalType == 2) { // Tricorn
+                                float x = z.x * z.x - z.y * z.y;
+                                float y = -2.0 * z.x * z.y;
+                                z = vec2(x, y) + c;
+                                
+                            } else if(fractalType == 3) { // Burning Ship
+                                z.x = abs(z.x);
+                                z.y = abs(z.y);
+                                float x = z.x * z.x - z.y * z.y;
+                                float y = 2.0 * z.x * z.y;
+                                z = vec2(x, -y) * params[7] + c;
+                                
+                            } else if(fractalType == 4) { // Celtic
+                                float x = abs(z.x * z.x - z.y * z.y);
+                                float y = 2.0 * z.x * z.y;
+                                z = vec2(x, y) * params[10] + c;
+                            }
+
+                            float mag2 = dot(z, z);
+                            if(mag2 > params[9] * params[9]) {
+                                smoothIter = float(iter) + 1.0 - log2(log2(mag2));
+                                break;
+                            }
+                        }
+
+                        float t;
+                        if(iter >= maxIterations) {
+                            t = 0.0;
+                        } else {
+                            t = mix(float(iter), smoothIter, params[1]);
+                            t = t / float(maxIterations);
+                        }
+
+                        vec3 color = getColor(t);
+                        fragColor = vec4(color, 1.0);
+                    }`;
+
+                // Create and compile shaders
+                const vs = this.createShader(this.gl.VERTEX_SHADER, vertexShader);
+                const fs = this.createShader(this.gl.FRAGMENT_SHADER, fragmentShader);
+                
+                // Create program
+                this.program = this.gl.createProgram();
+                this.gl.attachShader(this.program, vs);
+                this.gl.attachShader(this.program, fs);
+                this.gl.linkProgram(this.program);
+
+                // Setup a full-screen quad
+                const positions = new Float32Array([
+                    -1, -1,
+                     1, -1,
+                    -1,  1,
+                     1,  1
+                ]);
+
+                const buffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, positions, this.gl.STATIC_DRAW);
+
+                // Setup attributes and uniforms
+                const positionLocation = this.gl.getAttribLocation(this.program, 'position');
+                this.gl.enableVertexAttribArray(positionLocation);
+                this.gl.vertexAttribPointer(positionLocation, 2, this.gl.FLOAT, false, 0, 0);
+
+                // Store uniform locations
+                this.uniformLocations = {
+                    resolution: this.gl.getUniformLocation(this.program, 'resolution'),
+                    offset: this.gl.getUniformLocation(this.program, 'offset'),
+                    zoom: this.gl.getUniformLocation(this.program, 'zoom'),
+                    maxIterations: this.gl.getUniformLocation(this.program, 'maxIterations'),
+                    fractalType: this.gl.getUniformLocation(this.program, 'fractalType'),
+                    params: this.gl.getUniformLocation(this.program, 'params')
+                };
+            }
+
+            createShader(type, source) {
+                const shader = this.gl.createShader(type);
+                this.gl.shaderSource(shader, source);
+                this.gl.compileShader(shader);
+                if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
+                    console.error(this.gl.getShaderInfoLog(shader));
+                    this.gl.deleteShader(shader);
+                    return null;
+                }
+                return shader;
+            }
+
+            render() {
+                const gl = this.gl;
+                gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+                gl.useProgram(this.program);
+
+                // Create params array with all necessary values
+                const params = new Float32Array([
+                    this.params.colorCycles,      // [0]
+                    this.params.smoothing,        // [1]
+                    this.params.contrast,         // [2]
+                    this.params.brightness,       // [3]
+                    this.params.juliaReal,        // [4]
+                    this.params.juliaImag,        // [5]
+                    this.params.mandelbrotPower,  // [6]
+                    this.params.shipRotation,     // [7]
+                    this.params.colorScheme,      // [8]
+                    this.params.escapeRadius,     // [9]
+                    this.params.foldIntensity,    // [10]
+                    this.params.colorOffset       // [11]
+                ]);
+
+                // Update uniforms
+                gl.uniform2f(this.uniformLocations.resolution, this.canvas.width, this.canvas.height);
+                gl.uniform2f(this.uniformLocations.offset, this.params.offsetX, this.params.offsetY);
+                gl.uniform1f(this.uniformLocations.zoom, this.params.zoom);
+                gl.uniform1i(this.uniformLocations.maxIterations, this.params.maxIterations);
+                gl.uniform1i(this.uniformLocations.fractalType, 
+                    ['mandelbrot', 'julia', 'tricorn', 'burning-ship', 'celtic']
+                    .indexOf(this.params.fractalType));
+                gl.uniform1fv(this.uniformLocations.params, params);
+
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+            }
+
+            setupEventListeners() {
+                let zoomInterval = null;
+                let currentX = 0;
+                let currentY = 0;
+                
+                this.canvas.addEventListener('mousemove', (e) => {
+                    currentX = e.clientX;
+                    currentY = e.clientY;
+                    
+                    if (this.isDragging) {
+                        const dx = e.clientX - this.lastX;
+                        const dy = e.clientY - this.lastY;
+                        const panSpeed = 1.0 / this.params.zoom;
+                        this.params.offsetX -= dx * panSpeed * 2;
+                        this.params.offsetY += dy * panSpeed * 2;
+                        this.lastX = e.clientX;
+                        this.lastY = e.clientY;
+                        this.render();
+                    }
+                });
+
+                this.canvas.addEventListener('mousedown', (e) => {
+                    if (e.button === 0) { // Left click for pan
+                        this.isDragging = true;
+                        this.lastX = e.clientX;
+                        this.lastY = e.clientY;
+                    } else if (e.button === 2) { // Right click for continuous zoom
+                        e.preventDefault();
+                        const zoomSpeed = 0.02; // Adjust for faster/slower zoom
+                        
+                        const doZoom = () => {
+                            // Use current mouse position for each zoom step
+                            const factor = e.shiftKey ? (1 - zoomSpeed) : (1 + zoomSpeed);
+                            this.zoomAtPoint(currentX, currentY, factor);
+                            zoomInterval = requestAnimationFrame(doZoom);
+                        };
+                        doZoom();
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    this.isDragging = false;
+                    if (zoomInterval) {
+                        cancelAnimationFrame(zoomInterval);
+                        zoomInterval = null;
+                    }
+                });
+
+                // Prevent context menu
+                this.canvas.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                });
+
+                // Mouse wheel zoom
+                this.canvas.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    const factor = e.deltaY > 0 ? 0.95 : 1.05;
+                    this.zoomAtPoint(e.clientX, e.clientY, factor);
+                });
+
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    this.resizeCanvas();
+                    this.render();
+                });
+            }
+
+            zoomAtPoint(x, y, factor) {
+                const rect = this.canvas.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                
+                // Convert screen coordinates to canvas coordinates
+                const canvasX = (x - rect.left) * dpr;
+                const canvasY = (y - rect.top) * dpr;
+                
+                // Convert to normalized device coordinates (-1 to 1)
+                const ndcX = (canvasX / this.canvas.width) * 2 - 1;
+                const ndcY = 1 - (canvasY / this.canvas.height) * 2; // Invert Y coordinate
+                
+                // Convert to fractal coordinates
+                const fractalX = (ndcX * this.canvas.width / this.params.zoom) + this.params.offsetX;
+                const fractalY = (ndcY * this.canvas.height / this.params.zoom) + this.params.offsetY;
+                
+                // Update zoom
+                this.params.zoom *= factor;
+                
+                // Calculate new offsets to maintain the zoom point
+                this.params.offsetX = fractalX - (ndcX * this.canvas.width / this.params.zoom);
+                this.params.offsetY = fractalY - (ndcY * this.canvas.height / this.params.zoom);
+                
+                // Update coordinates display
+                const coordsElement = document.querySelector('.coordinates');
+                if (coordsElement) {
+                    coordsElement.textContent = 
+                        `x: ${fractalX.toFixed(6)} y: ${fractalY.toFixed(6)} zoom: ${this.params.zoom.toFixed(1)}x`;
+                }
+                
+                this.render();
+            }
+
+            setupControls() {
+                // Update control handling
+                const updateParameter = (id, value) => {
+                    this.params[id] = parseFloat(value);
+                    const rangeValue = document.querySelector(`label[for="${id}"] .range-value`);
+                    if (rangeValue) {
+                        rangeValue.textContent = parseFloat(value).toFixed(2);
+                    }
+                    this.render();
+                };
+
+                // Set up all range inputs
+                document.querySelectorAll('input[type="range"]').forEach(input => {
+                    // Set initial values
+                    input.value = this.params[input.id];
+                    updateParameter(input.id, input.value);
+
+                    // Add event listener
+                    input.addEventListener('input', (e) => {
+                        updateParameter(e.target.id, e.target.value);
+                    });
+                });
+
+                // Set up color scheme buttons
+                document.querySelectorAll('.color-preset').forEach(preset => {
+                    preset.addEventListener('click', (e) => {
+                        document.querySelectorAll('.color-preset').forEach(p => 
+                            p.classList.remove('active'));
+                        preset.classList.add('active');
+                        this.params.colorScheme = parseInt(preset.dataset.scheme);
+                        this.render();
+                    });
+                });
+
+                // Handle custom color picker
+                const customColorPicker = document.getElementById('customColorPicker');
+                if (customColorPicker) {
+                    customColorPicker.addEventListener('input', (e) => {
+                        this.params.customColor = e.target.value;
+                        this.render();
+                    });
+                }
+
+                // Add fractal type button listeners
+                document.querySelectorAll('[data-type]').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        this.switchFractalType(e.target.dataset.type);
+                    });
+                });
+            }
+
+            // Add this method for fractal type switching
+            switchFractalType(type) {
+                // Remove active class from all buttons
+                document.querySelectorAll('[data-type]').forEach(btn => 
+                    btn.classList.remove('active'));
+                // Add active class to selected button
+                document.querySelector(`[data-type="${type}"]`).classList.add('active');
+
+                this.params.fractalType = type;
+                
+                // Hide all type-specific controls
+                document.querySelectorAll('.type-specific').forEach(el => {
+                    el.style.display = 'none';
+                });
+                
+                // Show relevant controls and set default values
+                switch(type) {
+                    case 'mandelbrot':
+                        document.querySelectorAll('.mandelbrot-params').forEach(el => {
+                            el.style.display = 'block';
+                        });
+                        this.params.offsetX = -0.5;
+                        this.params.offsetY = 0;
+                        this.params.zoom = 250;
+                        this.params.mandelbrotPower = 2.0;
+                        break;
+                    case 'julia':
+                        document.querySelectorAll('.julia-params').forEach(el => {
+                            el.style.display = 'block';
+                        });
+                        this.params.offsetX = 0;
+                        this.params.offsetY = 0;
+                        this.params.zoom = 250;
+                        this.params.juliaReal = -0.4;
+                        this.params.juliaImag = 0.6;
+                        break;
+                    case 'tricorn':
+                        this.params.offsetX = 0;
+                        this.params.offsetY = 0;
+                        this.params.zoom = 250;
+                        break;
+                    case 'burning-ship':
+                        document.querySelectorAll('.burning-ship-params').forEach(el => {
+                            el.style.display = 'block';
+                        });
+                        this.params.offsetX = -0.5;
+                        this.params.offsetY = -0.25;
+                        this.params.zoom = 250;
+                        this.params.shipRotation = 1.0;
+                        break;
+                    case 'celtic':
+                        document.querySelectorAll('.celtic-params').forEach(el => {
+                            el.style.display = 'block';
+                        });
+                        this.params.offsetX = -0.5;
+                        this.params.offsetY = 0;
+                        this.params.zoom = 250;
+                        this.params.foldIntensity = 1.0;
+                        break;
+                }
+                
+                this.render();
+            }
+
+            // Add reset method
+            reset() {
+                this.params = {
+                    ...this.params,
+                    zoom: 250,
+                    offsetX: -0.5,
+                    offsetY: 0,
+                    colorCycles: 1.0,
+                    colorOffset: 0,
+                    brightness: 1.0,
+                    contrast: 1.0,
+                    smoothing: 1.0
+                };
+                this.render();
+            }
+
+            resizeCanvas() {
+                const dpr = window.devicePixelRatio || 1;
+                const displayWidth = Math.floor(this.canvas.clientWidth * dpr);
+                const displayHeight = Math.floor(this.canvas.clientHeight * dpr);
+
+                // Only resize if necessary
+                if (this.canvas.width !== displayWidth || this.canvas.height !== displayHeight) {
+                    this.canvas.width = displayWidth;
+                    this.canvas.height = displayHeight;
                 }
             }
+
+            getColorSchemeIndex() {
+                const schemes = {
+                    'rainbow': 0,
+                    'fire': 1,
+                    'ocean': 2,
+                    'psychedelic': 3,
+                    'red': 4,
+                    'green': 5,
+                    'blue': 6,
+                    'purple': 7,
+                    'custom': 8
+                };
+                return schemes[this.params.colorScheme] || 0;
+            }
         }
 
-        ctx.putImageData(imageData, 0, 0);
-        return targetCanvas;
-    }
-}
-
-window.addEventListener('load', () => {
-try {
-    window.explorer = new FractalExplorer();
-} catch (error) {
-    const debug = document.getElementById('debug');
-    debug.style.display = 'block';
-    debug.textContent = 'Initialization error: ' + error.message;
-}
-});
+        // Initialize when the page loads
+        window.addEventListener('load', () => {
+            console.log("Page loaded, initializing FractalExplorer...");
+            window.explorer = new FractalExplorer();
+        });
     </script>
 </body>
 </html>
